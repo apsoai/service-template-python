@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "language": "python",
+  "rootFolder": "app",
+  "autogenFolder": "autogen",
+  "apiType": "Rest",
+  "entities": [],
+  "relationships": []
+}
