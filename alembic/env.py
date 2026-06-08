@@ -12,7 +12,7 @@ from alembic import context
 from app.database import Base
 
 # Import all models here so Alembic can detect them
-# from app.autogen.models import *
+from app.autogen.models import *
 
 config = context.config
 
