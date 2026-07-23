@@ -1,6 +1,8 @@
-# APSO Python Service Template
+# Apso Python Service Template
 
-A FastAPI service template for APSO CLI with SQLAlchemy 2.0 and async support.
+The GitHub template behind every Apso Python backend: FastAPI, SQLAlchemy 2.0 (async), Alembic, and PostgreSQL. `apso init --name my-api --language python` clones this repository, and `apso generate` turns your `.apsorc` schema into models, routers, schemas, and services inside it. The generated code is yours: Apache-2.0 licensed, no Apso SDK, no runtime dependency.
+
+New to Apso? The [quickstart](https://docs.apso.ai/get-started/quickstart) goes from schema to running API in about ten minutes. All three language templates are listed at [apso.ai/templates](https://apso.ai/templates).
 
 ## Stack
 
@@ -156,4 +158,4 @@ mypy app
 
 ## License
 
-MIT
+Apache License 2.0. See the [LICENSE](LICENSE) file.
