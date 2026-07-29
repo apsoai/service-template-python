@@ -13,11 +13,10 @@ from app.database import engine, Base
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
-    # Startup: Create database tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    if os.getenv("DATABASE_SYNC", "false").lower() == "true":
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
     yield
-    # Shutdown: Clean up resources
     await engine.dispose()
 
 
