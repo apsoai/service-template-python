@@ -1,22 +1,30 @@
 """
 FastAPI Application Entry Point
 """
+
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import engine, Base
+from app.database import Base, engine
+from app.observability import setup_tracing, shutdown_tracing
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan events"""
+    # Wire OpenTelemetry (no-op unless enabled via env). Safe by default: this
+    # never raises and never blocks startup on an unreachable collector.
+    setup_tracing(app, engine)
+
     if os.getenv("DATABASE_SYNC", "false").lower() == "true":
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     yield
+    # Flush/shut down any exported spans before the engine is disposed.
+    shutdown_tracing()
     await engine.dispose()
 
 

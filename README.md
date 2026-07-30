@@ -25,6 +25,8 @@ New to Apso? The [quickstart](https://docs.apso.ai/get-started/quickstart) goes 
 │   │   ├── routers/          # FastAPI routers
 │   │   ├── schemas/          # Pydantic schemas
 │   │   └── services/         # Service layer
+│   ├── observability/        # OpenTelemetry tracing bootstrap
+│   │   └── tracing.py        # setup_tracing() — off by default, wired in main.py
 │   └── extensions/           # Custom/manual code
 │       └── middleware/       # Custom middleware
 ├── tests/                    # Test files
@@ -155,6 +157,42 @@ Type checking:
 ```bash
 mypy app
 ```
+
+## Observability (OpenTelemetry)
+
+Every service built from this template ships with OpenTelemetry auto-instrumentation wired in. When enabled, each incoming HTTP request becomes a trace/span with route, method, status, latency, DB queries, and errors, exported over OTLP HTTP to a collector you point it at (an OpenTelemetry Collector feeding a Grafana/Tempo stack, or Grafana Cloud's managed OTLP endpoint).
+
+The export destination is never hardwired to an Apso endpoint. You own where telemetry goes.
+
+### Off by default
+
+Tracing is a no-op unless you turn it on. With no OTLP endpoint and no enable flag set, the instrumentation does not start, does not export anything, and cannot block startup on an unreachable collector. Local dev and CI run exactly as before. Setup is wrapped in try/except, so telemetry can never take the app down.
+
+### Enabling it
+
+Set the OTLP endpoint (and optionally a service name):
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export OTEL_SERVICE_NAME=my-api
+python -m app.main
+```
+
+You should see `[otel] tracing enabled (...)` on startup, and traces begin flowing to your collector.
+
+### Environment variables
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP HTTP endpoint (OpenTelemetry Collector or Grafana Cloud). Setting this enables tracing. | unset (tracing off) |
+| `OTEL_SERVICE_NAME` | `service.name` reported on every trace. | falls back to `APP_NAME`, then the `.apsorc` serviceName, then `apso-service` |
+| `OTEL_ENABLED` | Force-enable (`true`/`1`/`yes`/`on`) or force-disable (`false`/`0`/`no`/`off`), overriding endpoint detection. | unset |
+
+Standard `OTEL_*` environment variables (headers, resource attributes, sampling) are honored by the OpenTelemetry SDK as well.
+
+### How it is wired
+
+`app/observability/tracing.py` builds a `TracerProvider` with an OTLP HTTP span exporter and resource attributes (`service.name`, `service.version`), then instruments the FastAPI app (`FastAPIInstrumentor`) and the SQLAlchemy engine (`SQLAlchemyInstrumentor`). `setup_tracing(app, engine)` is called from the FastAPI lifespan in `app/main.py` after the app and engine exist. Spans are exported on a background thread via `BatchSpanProcessor` and flushed on shutdown so in-flight spans are not lost.
 
 ## License
 
