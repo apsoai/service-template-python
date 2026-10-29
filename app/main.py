@@ -52,11 +52,11 @@ async def api_root():
     return {"message": "APSO API", "version": "1.0.0"}
 
 
-# Import and include autogen routers
-# Entity routers will be registered here by the APSO CLI
-# Example:
-# from app.autogen.routers import organization, user
-# app.include_router(organization.router, prefix="/api/organizations", tags=["Organizations"])
+# Routes generated from .apsorc (`apso generate` writes app/autogen).
+# Include your own routers before this one to override a generated route.
+from app.autogen import autogen_router  # noqa: E402
+
+app.include_router(autogen_router)
 
 
 if __name__ == "__main__":
