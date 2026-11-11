@@ -8,12 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml .
-RUN pip install --no-cache-dir .
-
-# Copy application code
+# Copy the project and install it. pyproject.toml names README.md and the app
+# package, so the install needs more than pyproject.toml.
 COPY . .
+RUN pip install --no-cache-dir .
 
 # Expose port
 EXPOSE 3000
