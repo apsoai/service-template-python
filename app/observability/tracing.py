@@ -94,7 +94,7 @@ def _identity_attributes() -> dict:
 
     attrs = {
         "apso.service.id": first(
-            _env("APSO_SERVICE_ID"), _env("SERVICE_ID"), apsorc.get("serviceId")
+            _env("SERVICE_ID"), apsorc.get("serviceId")
         ),
         "apso.workspace.id": first(_env("APSO_WORKSPACE_ID"), apsorc.get("workspaceId")),
         "deployment.environment": first(_env("APSO_ENVIRONMENT"), _env("ENV")),

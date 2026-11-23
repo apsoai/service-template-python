@@ -36,7 +36,6 @@ def test_identity_env_beats_apsorc(monkeypatch, tmp_path):
     for v in (
         "OTEL_SERVICE_NAME",
         "APP_NAME",
-        "APSO_SERVICE_ID",
         "SERVICE_ID",
         "APSO_WORKSPACE_ID",
     ):
@@ -44,7 +43,8 @@ def test_identity_env_beats_apsorc(monkeypatch, tmp_path):
     assert tracing._service_name() == "from-file"
     assert tracing._identity_attributes()["apso.service.id"] == "1"
     assert tracing._identity_attributes()["apso.workspace.id"] == "9"
-    monkeypatch.setenv("APSO_SERVICE_ID", "42")
+    monkeypatch.setenv("APSO_SERVICE_ID", "stack-id")  # access-token audience, not the id
+    monkeypatch.setenv("SERVICE_ID", "42")
     assert tracing._identity_attributes()["apso.service.id"] == "42"
 
 
