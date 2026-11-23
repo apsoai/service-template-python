@@ -24,8 +24,31 @@ def test_endpoint_enables_and_kill_switch_wins(monkeypatch):
     assert tracing._tracing_enabled() is False
 
 
+def test_identity_env_beats_apsorc(monkeypatch, tmp_path):
+    (tmp_path / ".apsorc").write_text(
+        '{"serviceName":"from-file","serviceId":"1","workspaceId":"9"}'
+    )
+    monkeypatch.setattr(
+        tracing,
+        "_read_apsorc",
+        lambda: {"serviceName": "from-file", "serviceId": "1", "workspaceId": "9"},
+    )
+    for v in (
+        "OTEL_SERVICE_NAME",
+        "APP_NAME",
+        "APSO_SERVICE_ID",
+        "SERVICE_ID",
+        "APSO_WORKSPACE_ID",
+    ):
+        monkeypatch.delenv(v, raising=False)
+    assert tracing._service_name() == "from-file"
+    assert tracing._identity_attributes()["apso.service.id"] == "1"
+    assert tracing._identity_attributes()["apso.workspace.id"] == "9"
+    monkeypatch.setenv("APSO_SERVICE_ID", "42")
+    assert tracing._identity_attributes()["apso.service.id"] == "42"
+
+
 def test_request_produces_span_when_set_up_before_serving(monkeypatch):
-    from opentelemetry import trace
     from opentelemetry.sdk.trace.export import SimpleSpanProcessor
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
         InMemorySpanExporter,

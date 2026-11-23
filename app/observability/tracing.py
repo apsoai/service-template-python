@@ -61,18 +61,45 @@ def _service_name() -> str:
         if value:
             return value
 
-    # Fall back to the .apsorc serviceName if the file has one.
+    name = str(_read_apsorc().get("serviceName") or "").strip()
+    return name or "apso-service"
+
+
+def _read_apsorc() -> dict:
+    """Identity the CLI wrote into .apsorc at registration. {} if unreadable."""
     try:
         apsorc = Path(__file__).resolve().parents[2] / ".apsorc"
         if apsorc.is_file():
             data = json.loads(apsorc.read_text())
-            name = str(data.get("serviceName") or "").strip()
-            if name:
-                return name
+            return data if isinstance(data, dict) else {}
     except Exception:
         pass
+    return {}
 
-    return "apso-service"
+
+def _identity_attributes() -> dict:
+    """
+    Apso ids attached to every trace. Deploy env wins over .apsorc, so a hosted
+    deploy is authoritative and a forked repo carrying the original's ids is
+    overridden.
+    """
+    apsorc = _read_apsorc()
+
+    def first(*vals: Any) -> str:
+        for v in vals:
+            s = str(v or "").strip()
+            if s:
+                return s
+        return ""
+
+    attrs = {
+        "apso.service.id": first(
+            _env("APSO_SERVICE_ID"), _env("SERVICE_ID"), apsorc.get("serviceId")
+        ),
+        "apso.workspace.id": first(_env("APSO_WORKSPACE_ID"), apsorc.get("workspaceId")),
+        "deployment.environment": first(_env("APSO_ENVIRONMENT"), _env("ENV")),
+    }
+    return {k: v for k, v in attrs.items() if v}
 
 
 def _service_version() -> str:
@@ -119,6 +146,7 @@ def setup_tracing(app: Any, engine: Any = None) -> bool:
             {
                 "service.name": service_name,
                 "service.version": service_version,
+                **_identity_attributes(),
             }
         )
 
