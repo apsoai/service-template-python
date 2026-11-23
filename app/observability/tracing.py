@@ -36,9 +36,12 @@ def _tracing_enabled() -> bool:
     """
     Decide whether tracing should start.
 
-    - ``OTEL_ENABLED`` truthy/falsy overrides everything.
+    - ``APSO_TELEMETRY=off`` always wins (kill switch).
+    - ``OTEL_ENABLED`` truthy/falsy overrides endpoint detection.
     - Otherwise, tracing is enabled only when an OTLP endpoint is configured.
     """
+    if _env("APSO_TELEMETRY").lower() in _FALSY:
+        return False
     flag = _env("OTEL_ENABLED").lower()
     if flag in _TRUTHY:
         return True

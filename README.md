@@ -186,6 +186,7 @@ You should see `[otel] tracing enabled (...)` on startup, and traces begin flowi
 | --- | --- | --- |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP HTTP endpoint (OpenTelemetry Collector or Grafana Cloud). Setting this enables tracing. | unset (tracing off) |
 | `OTEL_SERVICE_NAME` | `service.name` reported on every trace. | falls back to `APP_NAME`, then the `.apsorc` serviceName, then `apso-service` |
+| `APSO_TELEMETRY` | Set to `off` to disable tracing no matter what else is set. | unset |
 | `OTEL_ENABLED` | Force-enable (`true`/`1`/`yes`/`on`) or force-disable (`false`/`0`/`no`/`off`), overriding endpoint detection. | unset |
 
 Standard `OTEL_*` environment variables (headers, resource attributes, sampling) are honored by the OpenTelemetry SDK as well.
