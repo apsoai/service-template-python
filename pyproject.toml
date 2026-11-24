@@ -22,6 +22,12 @@ dependencies = [
     "pydantic-settings>=2.1.0",
     "python-dotenv>=1.0.0",
     "httpx>=0.26.0",
+    # Observability (OpenTelemetry). Mutually-compatible pins: SDK 1.30.x pairs
+    # with instrumentation 0.51b0. Tracing is off unless enabled via env.
+    "opentelemetry-sdk>=1.30.0,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
+    "opentelemetry-instrumentation-fastapi>=0.51b0,<1",
+    "opentelemetry-instrumentation-sqlalchemy>=0.51b0,<1",
 ]
 
 [project.optional-dependencies]

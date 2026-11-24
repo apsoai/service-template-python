@@ -1,13 +1,15 @@
 """
 FastAPI Application Entry Point
 """
+
 import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.database import engine, Base
+from app.database import Base, engine
+from app.observability import setup_tracing, shutdown_tracing
 
 
 @asynccontextmanager
@@ -17,6 +19,8 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
     yield
+    # Flush/shut down any exported spans before the engine is disposed.
+    shutdown_tracing()
     await engine.dispose()
 
 
@@ -28,6 +32,10 @@ app = FastAPI(
     redoc_url="/_redoc",
     lifespan=lifespan,
 )
+
+# Wire OpenTelemetry here, not in lifespan: FastAPIInstrumentor only takes effect
+# if it runs before Starlette builds the middleware stack. No-op unless enabled.
+setup_tracing(app, engine)
 
 # CORS configuration
 cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
